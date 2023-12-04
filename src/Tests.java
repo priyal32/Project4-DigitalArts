@@ -5,6 +5,7 @@
 
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 
@@ -54,6 +55,10 @@ public class Tests {
         if(Input.GetKeyDown('9')){
             ResetEngine();
             TestNine();
+        }
+        if(Input.GetKeyDown('q')){
+            ResetEngine();
+            TestTen();
         }
     }
 
@@ -105,7 +110,7 @@ public class Tests {
 
     //Test: scale script
     static void TestFour(){
-        GameObject g = new GameObject(150,150);
+        GameObject g = new GameObject(50,50);
         g.shape = new Ellipse2D.Float(0,0,50,50);
         g.material = new Material(Color.ORANGE,Color.BLUE,3);
         g.scripts.add(new Scaler(g));
@@ -172,6 +177,17 @@ public class Tests {
 
     }
 
+    static void TestTen(){
+
+
+        GameObject g2 = new GameObject(250,250);
+        g2.shape = new Ellipse2D.Float(0,0,150,150);
+        Point2D point2D = new Point(360,390);
+        g2.scripts.add(new PointCheck(g2, point2D));
+        GatorEngine.OBJECTLIST.add(g2);
+
+
+    }
 
     static public class Spawner  extends ScriptableBehavior {
         ArrayList<GameObject> spawned = new ArrayList<>();
@@ -330,4 +346,32 @@ public class Tests {
                 gameObject.material.setFill(colliding);
         }
     }
+
+    static public class PointCheck extends ScriptableBehavior{
+        Color not_colliding;
+        Color colliding;
+        GameObject other;
+        Point2D point2D;
+
+
+        PointCheck(GameObject g, Point2D point2D) {
+            super(g);
+            this.point2D = point2D;
+            not_colliding = Color.BLUE;
+            colliding = Color.ORANGE;
+        }
+
+        @Override
+        public void Start() {
+        }
+
+        @Override
+        public void Update() {
+            if(gameObject.Contains(point2D)) {
+                gameObject.material.setFill(not_colliding);
+            }else
+                gameObject.material.setFill(colliding);
+        }
+    }
+
 }

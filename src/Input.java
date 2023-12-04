@@ -13,7 +13,6 @@ public class Input {
     //TODO: this function should happen every frame, and should clear any values in the Input class that need to be removed
     //i.e., if a key was pressed on one frame, on the next it should be removed from the pressed list
     static void UpdateInputs(){
-        held.clear();
         released.clear();
         pressed.clear();
     }

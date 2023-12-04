@@ -1,8 +1,12 @@
+import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.event.MouseInputAdapter;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class GatorEngine {
     //UI Components (things that are "more" related to the UI)
@@ -11,6 +15,30 @@ public class GatorEngine {
     static JLabel DISPLAY_LABEL;
     static BufferedImage DISPLAY;
     static int WIDTH=500, HEIGHT=500;
+
+
+    static String path = "resources/Title.png";
+
+    static boolean started = false;
+
+    static int change = 0;
+
+    public static void setPath(int c) {
+        change = c;
+        switch (c){
+            case 0:
+                path = "resources/Title.png";
+                break;
+            case 1:
+                path = "resources/Background.png";
+                break;
+            case 2:
+                path = "resources/DeathScreen.png";
+                break;
+        }
+    }
+
+
 
     //Engine Components (things that are "more" related to the engine structures)
     static Graphics2D RENDERER;
@@ -22,7 +50,6 @@ public class GatorEngine {
     static Timer FRAMETIMER; //Timer controlling the update loop
     static Thread FRAMETHREAD; //the Thread implementing the update loop
     static Thread ACTIVE_FRAMETHREAD; //a copy of FRAMETHREAD that actually runs.
-
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
@@ -43,41 +70,57 @@ public class GatorEngine {
         RENDERER = (Graphics2D) DISPLAY.getGraphics();
         DISPLAY_CONTAINER = new JPanel();
         DISPLAY_CONTAINER.setFocusable(true);
+
         DISPLAY_LABEL = new JLabel(new ImageIcon(DISPLAY));
+
         DISPLAY_CONTAINER.add(DISPLAY_LABEL);
+
         WINDOW.add(DISPLAY_CONTAINER);
+
+
         WINDOW.pack();
 
+
+
         //TODO: make this 1)execute Update(), 2) clear any inputs that need to be removed between frames, and 3) repaint the GUI back on the EDT.
-        FRAMETHREAD = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Update();
-                Input.UpdateInputs();
-                UpdateObjectList();
-                SwingUtilities.invokeLater(() -> {
-                    WINDOW.repaint();
-                });
 
-            }
-        });
+            FRAMETHREAD = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Update();
+                    Input.UpdateInputs();
+                    UpdateObjectList();
 
-        //This copies the template thread made above
-        ACTIVE_FRAMETHREAD = new Thread(FRAMETHREAD);
+                    if(!started && change == 1){
+                        Start();
+                        started = true;
+                    }
 
-        //TODO: create a timer that will create/run ACTIVE_FRAMETHREAD, but only if it it hasn't started/has ended
-        FRAMETIMER = new Timer((int)FRAMEDELAY, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (!ACTIVE_FRAMETHREAD.isAlive()){
-                    ACTIVE_FRAMETHREAD = new Thread(FRAMETHREAD);
-                    ACTIVE_FRAMETHREAD.start();
+                    SwingUtilities.invokeLater(() -> {
+                        WINDOW.repaint();
+                    });
+
                 }
-            }
-        });
-        FRAMETIMER.start();
+            });
 
-        Start();
+            //This copies the template thread made above
+            ACTIVE_FRAMETHREAD = new Thread(FRAMETHREAD);
+
+            //TODO: create a timer that will create/run ACTIVE_FRAMETHREAD, but only if it it hasn't started/has ended
+            FRAMETIMER = new Timer((int)FRAMEDELAY, new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if (!ACTIVE_FRAMETHREAD.isAlive()){
+                   //     System.out.println("not alive");
+                        ACTIVE_FRAMETHREAD = new Thread(FRAMETHREAD);
+                        ACTIVE_FRAMETHREAD.start();
+                    }
+                }
+            });
+            FRAMETIMER.start();
+
+
+
 
         //===================INPUT=========================
         //Set up some action listeners for input on the PANEL
@@ -87,12 +130,22 @@ public class GatorEngine {
             @Override
             public void keyTyped(KeyEvent e) {
 
+//                Input.pressed.add(e.getKeyChar());
+//
+//                Input.held.add(e.getKeyChar());
+
             }
 
             @Override
             public void keyPressed(KeyEvent e) {
-                Input.pressed.add(e.getKeyChar());
-                Input.held.add(e.getKeyChar());            }
+
+                    Input.pressed.add(e.getKeyChar());
+                    if(!Input.held.contains(e.getKeyChar()))
+                        Input.held.add(e.getKeyChar());
+
+
+            }
+
 
             @Override
             public void keyReleased(KeyEvent e) {
@@ -101,12 +154,43 @@ public class GatorEngine {
                 Input.held.remove(o);
             }
         });
+
+
         DISPLAY_CONTAINER.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 Input.MouseX = e.getX();
                 Input.MouseY = e.getY();
+                if(change == 0 && onStartButton(Input.MouseX, Input.MouseY)){
+                    setPath(1);
+                }
+                if(change == 2 && onEndButton(Input.MouseX, Input.MouseY)){
+                    GatorInvaders.gameEnd(0);
+                    started = false;
+                }
                 Input.MouseClicked = true;
+            }
+
+            private boolean onStartButton(int mouseX, int mouseY) {
+
+                int x = 204;
+                int y = 315;
+                int Width = 95;
+                int Height = 46;
+               
+
+                return mouseX >= x && mouseX <= x + Width && mouseY >= y && mouseY <= y + Height;
+            }
+
+            private boolean onEndButton(int mouseX, int mouseY) {
+
+                int x = 146;
+                int y = 386;
+                int Width = 220;
+                int Height = 45;
+
+
+                return mouseX >= x && mouseX <= x + Width && mouseY >= y && mouseY <= y + Height;
             }
 
             @Override
@@ -176,6 +260,9 @@ public class GatorEngine {
     //NOTE: This is where we should be able to insert out own code and scripts
     static void Start(){
         //TODO: Start() all objects in OBJECTLIST
+        GatorInvaders.Start();
+        //Tests.TestEight();
+
         for(GameObject o : OBJECTLIST){
             o.Start();
         }
@@ -184,8 +271,8 @@ public class GatorEngine {
 
     //TODO: Redraw the Background(), then Draw() and Update() all GameObjects in OBJECTLIST
     static void Update(){
-        // Tests.TestControllerUpdate();
-        Background();
+        //Tests.TestControllerUpdate();
+        Background(path);
         for (GameObject o : OBJECTLIST) {
             o.Draw(RENDERER);
             o.Update();
@@ -196,10 +283,12 @@ public class GatorEngine {
 
     //draws a background on the Renderer. right now it is solid, but we could load an image
     //done for you!
-    static void Background(){
-
-        RENDERER.setColor(Color.WHITE);
-        RENDERER.fillRect(0,0,WIDTH,HEIGHT);
+    static void Background(String path){
+        Material material = new Material(path);
+        RENDERER.drawImage(material.getImg(),null, 0,0);
     }
+
+
+
 
 }

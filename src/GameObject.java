@@ -1,8 +1,5 @@
 import java.awt.*;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Area;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
+import java.awt.geom.*;
 import java.util.ArrayList;
 
 public class GameObject {
@@ -90,6 +87,13 @@ public class GameObject {
 
     }
 
+    public Rectangle2D Bounds(){
+        Area area = new Area(shape);
+        area.transform(transform);
+
+        return area.getBounds2D();
+    }
+
     //TODO: should return true if the two objects are touching (i.e., the intersection of their areas is not empty)
     public boolean CollidesWith(GameObject other){
 
@@ -98,7 +102,6 @@ public class GameObject {
 
         Area otherArea = new Area(other.shape);
         otherArea.transform(other.transform);
-
         area.intersect(otherArea);
 
         return !area.isEmpty();
@@ -107,7 +110,10 @@ public class GameObject {
 
     //TODO: should return true of the shape on screen contains the point
     public boolean Contains(Point2D point){
-        return shape.contains(point);
+        Area area = new Area(shape);
+        area.transform(transform);
+
+        return area.contains(point);
     }
 
 }
