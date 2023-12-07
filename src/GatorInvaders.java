@@ -18,11 +18,16 @@ public class GatorInvaders {
     static ArrayList<GameObject> Lives = new ArrayList<>();
 
     static void Start(){
-        Lives = new ArrayList<>();
+        Lives.clear();
+        Invaders.clear();
+        bullets.clear();
+        enemyBullets.clear();
         shooter = new GameObject(150,390);
         shooter.shape = new Rectangle2D.Float(0, 0, 50, 50);
         shooter.material = new Material("resources/Ship.png");
         shooter.scripts.add(new ShipMovement(shooter,6));
+        //System.out.println(shooter.shape.getBounds().getY());
+
         GatorEngine.Create(shooter);
 
 
@@ -76,6 +81,9 @@ public class GatorInvaders {
         }
     }
 
+    public static boolean pastShip(GameObject gameObject){
+        return gameObject.transform.getTranslateY() > shooter.transform.getTranslateY();
+    }
 
     public static boolean outOfWindow(GameObject gameObject){
         if(gameObject.transform.getTranslateX()<=0) return true;
@@ -84,15 +92,14 @@ public class GatorInvaders {
         if(gameObject.transform.getTranslateY()<0){
             return true;
         }
-        if(gameObject.transform.getTranslateY()>GatorEngine.HEIGHT){
-            return true;
-        }
-        return false;
+        return gameObject.transform.getTranslateY() > GatorEngine.HEIGHT;
     }
 
     public static void gameEnd(int path){
         ResetGame();
+        level = 1;
         GatorEngine.setPath(path);
+        GatorEngine.CREATELIST.add(GatorEngine.endButton);
     }
 
     public static void ResetGame(){
@@ -101,10 +108,15 @@ public class GatorInvaders {
         GatorEngine.DELETELIST.add(GatorInvaders.shooter);
         GatorEngine.DELETELIST.addAll(GatorInvaders.Lives);
         GatorEngine.DELETELIST.addAll(GatorInvaders.enemyBullets);
+
     }
 
     public static void NextLevel(){
-        level++;
+        if(level == 3){
+            level = 1;
+        }else{
+            level++;
+        }
         ResetGame();
         Start();
     }

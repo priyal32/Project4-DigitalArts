@@ -50,6 +50,9 @@ public class GatorEngine {
     static Timer FRAMETIMER; //Timer controlling the update loop
     static Thread FRAMETHREAD; //the Thread implementing the update loop
     static Thread ACTIVE_FRAMETHREAD; //a copy of FRAMETHREAD that actually runs.
+    static GameObject startButton = new GameObject();
+
+    static GameObject endButton = new GameObject();
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
@@ -76,51 +79,74 @@ public class GatorEngine {
         DISPLAY_CONTAINER.add(DISPLAY_LABEL);
 
         WINDOW.add(DISPLAY_CONTAINER);
-
-
         WINDOW.pack();
 
-
+        Color color = new Color(0,0,0,0);
+        startButton.material = new Material(color,color,10);
+        startButton.shape = new Rectangle(204,315,95,46);
+        endButton.material = new Material(color,color,10);
+        endButton.shape = new Rectangle(146,386,220,45);
 
         //TODO: make this 1)execute Update(), 2) clear any inputs that need to be removed between frames, and 3) repaint the GUI back on the EDT.
 
-            FRAMETHREAD = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    Update();
-                    Input.UpdateInputs();
-                    UpdateObjectList();
+        FRAMETHREAD = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if(change == 0){
+                    Point point = new Point(Input.MouseX, Input.MouseY);
+                    if(startButton.Contains(point)){
 
-                    if(!started && change == 1){
-                        Start();
-                        started = true;
+                        startButton.material.setFill(new Color(30,120,30,5));
+                    }else{
+                        startButton.material.setFill(new Color(30,120,30,0));
                     }
+                    CREATELIST.add(startButton);
 
-                    SwingUtilities.invokeLater(() -> {
-                        WINDOW.repaint();
-                    });
 
                 }
-            });
+                if(change == 2){
+                    Point point = new Point(Input.MouseX, Input.MouseY);
+                    if(endButton.Contains(point)){
 
-            //This copies the template thread made above
-            ACTIVE_FRAMETHREAD = new Thread(FRAMETHREAD);
+                        endButton.material.setFill(new Color(30,120,30,5));
 
-            //TODO: create a timer that will create/run ACTIVE_FRAMETHREAD, but only if it it hasn't started/has ended
-            FRAMETIMER = new Timer((int)FRAMEDELAY, new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (!ACTIVE_FRAMETHREAD.isAlive()){
-                   //     System.out.println("not alive");
-                        ACTIVE_FRAMETHREAD = new Thread(FRAMETHREAD);
-                        ACTIVE_FRAMETHREAD.start();
+                    }else{
+                        endButton.material.setFill(new Color(30,120,30,0));
                     }
+                    CREATELIST.add(endButton);
+
                 }
-            });
-            FRAMETIMER.start();
+                Update();
+                Input.UpdateInputs();
+                UpdateObjectList();
 
+                if(!started && change == 1){
+                    Start();
+                    started = true;
+                }
 
+                SwingUtilities.invokeLater(() -> {
+                    WINDOW.repaint();
+                });
 
+            }
+        });
+
+        //This copies the template thread made above
+        ACTIVE_FRAMETHREAD = new Thread(FRAMETHREAD);
+
+        //TODO: create a timer that will create/run ACTIVE_FRAMETHREAD, but only if it it hasn't started/has ended
+        FRAMETIMER = new Timer((int)FRAMEDELAY, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (!ACTIVE_FRAMETHREAD.isAlive()){
+                    //     System.out.println("not alive");
+                    ACTIVE_FRAMETHREAD = new Thread(FRAMETHREAD);
+                    ACTIVE_FRAMETHREAD.start();
+                }
+            }
+        });
+        FRAMETIMER.start();
 
         //===================INPUT=========================
         //Set up some action listeners for input on the PANEL
@@ -130,18 +156,14 @@ public class GatorEngine {
             @Override
             public void keyTyped(KeyEvent e) {
 
-//                Input.pressed.add(e.getKeyChar());
-//
-//                Input.held.add(e.getKeyChar());
-
             }
 
             @Override
             public void keyPressed(KeyEvent e) {
 
-                    Input.pressed.add(e.getKeyChar());
-                    if(!Input.held.contains(e.getKeyChar()))
-                        Input.held.add(e.getKeyChar());
+                Input.pressed.add(e.getKeyChar());
+                if(!Input.held.contains(e.getKeyChar()))
+                    Input.held.add(e.getKeyChar());
 
 
             }
@@ -159,28 +181,27 @@ public class GatorEngine {
         DISPLAY_CONTAINER.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {
+
                 Input.MouseX = e.getX();
                 Input.MouseY = e.getY();
-                if(change == 0 && onStartButton(Input.MouseX, Input.MouseY)){
-                    setPath(1);
+                Point point = new Point(e.getX(), e.getY());
+                if(startButton.Contains(point) && change == 0){
+                    startButton.material.setFill(new Color(20,20,20,20));
+                    DELETELIST.add(startButton);
+                    if(change == 0){
+                        setPath(1);
+                    }
                 }
-                if(change == 2 && onEndButton(Input.MouseX, Input.MouseY)){
+
+                if(change == 2 && endButton.Contains(point)){
                     GatorInvaders.gameEnd(0);
                     started = false;
+                    DELETELIST.add(endButton);
+                    CREATELIST.add(startButton);
                 }
                 Input.MouseClicked = true;
             }
 
-            private boolean onStartButton(int mouseX, int mouseY) {
-
-                int x = 204;
-                int y = 315;
-                int Width = 95;
-                int Height = 46;
-               
-
-                return mouseX >= x && mouseX <= x + Width && mouseY >= y && mouseY <= y + Height;
-            }
 
             private boolean onEndButton(int mouseX, int mouseY) {
 
@@ -209,6 +230,7 @@ public class GatorEngine {
 
             @Override
             public void mouseEntered(MouseEvent e) {
+
                 Input.MouseX = e.getX();
                 Input.MouseY = e.getY();
             }
@@ -228,8 +250,10 @@ public class GatorEngine {
 
             @Override
             public void mouseMoved(MouseEvent e) {
+
                 Input.MouseX = e.getX();
                 Input.MouseY = e.getY();
+
             }
         });
     }
@@ -287,8 +311,5 @@ public class GatorEngine {
         Material material = new Material(path);
         RENDERER.drawImage(material.getImg(),null, 0,0);
     }
-
-
-
 
 }

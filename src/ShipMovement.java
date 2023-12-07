@@ -5,7 +5,7 @@ class ShipMovement extends ScriptableBehavior {
 
 
     int speed = 1;
-    boolean fireOnce = false;
+    public static boolean immunity = false;
 
     int delay = 0;
     int shootingDelay = 0;

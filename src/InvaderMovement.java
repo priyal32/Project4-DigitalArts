@@ -10,12 +10,10 @@ import java.util.Random;
 
 public class InvaderMovement extends  ScriptableBehavior {
     int j = 1;
-    long start = Instant.now().getEpochSecond();
+    long start = 0;
     double speed;
 
-    GameObject first;
-    GameObject last;
-
+    int delay = 0;
     boolean movementChanged = false;
 
     int invaderLevel;
@@ -29,24 +27,26 @@ public class InvaderMovement extends  ScriptableBehavior {
 
     @Override
     public void Start() {
-
+        delay = 0;
     }
 
     @Override
     public void Update() {
-        first = GatorInvaders.Invaders.get(0);
-        last = GatorInvaders.Invaders.get(GatorInvaders.Invaders.size() - 1);
+        if(GatorInvaders.pastShip(gameObject)){
+            GatorInvaders.gameEnd(2);
+        }
         movementChanged = false;
         
-        if (Instant.now().getEpochSecond() - start >= 1.5) {
+        if (delay - start >= 40) {
             j++;
             if (j > 4) {
                 j = 1;
             }
-            start = Instant.now().getEpochSecond();
+            start = delay;
             movementChanged = true;
 
         }
+        delay++;
 
         switch (j) {
             case 1:
@@ -90,6 +90,8 @@ public class InvaderMovement extends  ScriptableBehavior {
                 if(invaderLevel == 1) {
                     GatorEngine.DELETELIST.add(gameObject);
                     GatorInvaders.Invaders.remove(gameObject);
+                    System.out.println("in");
+                    System.out.println(GatorInvaders.Invaders.size());
 
                 }else{
                     changeInvaderLevel(invaderLevel);
@@ -102,14 +104,11 @@ public class InvaderMovement extends  ScriptableBehavior {
             GatorEngine.DELETELIST.add(bulletToRemove);
             GatorInvaders.bullets.remove(bulletToRemove);
         }
-        System.out.println(GatorInvaders.Invaders.size());
         if(GatorInvaders.Invaders.isEmpty()){
+            System.out.println("empty!");
             GatorInvaders.NextLevel();
         }
 
-        if (GatorInvaders.outOfWindow(gameObject)) {
-            GatorInvaders.gameEnd(2);
-        }
     }
 
     public void changeInvaderLevel(int level){
