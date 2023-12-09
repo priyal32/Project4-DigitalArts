@@ -35,15 +35,31 @@ public class InvaderMovement extends  ScriptableBehavior {
         if(GatorInvaders.pastShip(gameObject)){
             GatorInvaders.gameEnd(2);
         }
-        movementChanged = false;
-        
+
         if (delay - start >= 40) {
             j++;
             if (j > 4) {
                 j = 1;
             }
             start = delay;
-            movementChanged = true;
+            Random random = new Random();
+
+            int probability = 0;
+            if(invaderLevel == 1)
+                probability = random.nextInt(20);
+            else if (invaderLevel == 2)
+                probability = random.nextInt(22);
+            else if(invaderLevel == 3)
+                probability = random.nextInt(24);
+
+            if (probability > 17) {
+                GameObject bullet = new GameObject((int) gameObject.Bounds().getX() + 10, (int) gameObject.Bounds().getY() - 10);
+                bullet.shape = new Ellipse2D.Double(0, 0, 7, 7);
+                bullet.material = new Material(Color.BLUE, Color.ORANGE, 3);
+                bullet.scripts.add(new EnemyBulletMovement(bullet, 10));
+                GatorEngine.Create(bullet);
+                GatorInvaders.enemyBullets.add(bullet);
+            }
 
         }
         delay++;
@@ -63,35 +79,13 @@ public class InvaderMovement extends  ScriptableBehavior {
                 break;
         }
 
-        if (movementChanged) {
-            // the enemy has a random probability to shoot a bullet
-            Random random = new Random();
 
-            int probability = 0;
-            if(invaderLevel == 1)
-                probability = random.nextInt(20);
-            else if (invaderLevel == 2)
-                probability = random.nextInt(22);
-            else if(invaderLevel == 3)
-                probability = random.nextInt(24);
-            
-            if (probability > 17) {
-                GameObject bullet = new GameObject((int) gameObject.Bounds().getX() + 10, (int) gameObject.Bounds().getY() - 10);
-                bullet.shape = new Ellipse2D.Double(0, 0, 9, 9);
-                bullet.material = new Material(Color.BLUE, Color.ORANGE, 3);
-                bullet.scripts.add(new EnemyBulletMovement(bullet, 10));
-                GatorEngine.Create(bullet);
-                GatorInvaders.enemyBullets.add(bullet);
-            }
-        }
         GameObject bulletToRemove = null;
         for(GameObject bullet : GatorInvaders.bullets){
             if(this.gameObject.CollidesWith(bullet)){
                 if(invaderLevel == 1) {
                     GatorEngine.DELETELIST.add(gameObject);
                     GatorInvaders.Invaders.remove(gameObject);
-                    System.out.println("in");
-                    System.out.println(GatorInvaders.Invaders.size());
 
                 }else{
                     changeInvaderLevel(invaderLevel);
@@ -105,7 +99,6 @@ public class InvaderMovement extends  ScriptableBehavior {
             GatorInvaders.bullets.remove(bulletToRemove);
         }
         if(GatorInvaders.Invaders.isEmpty()){
-            System.out.println("empty!");
             GatorInvaders.NextLevel();
         }
 

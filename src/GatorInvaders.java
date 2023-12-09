@@ -1,8 +1,6 @@
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
+import java.util.*;
 
 
 public class GatorInvaders {
@@ -25,17 +23,12 @@ public class GatorInvaders {
         shooter = new GameObject(150,390);
         shooter.shape = new Rectangle2D.Float(0, 0, 50, 50);
         shooter.material = new Material("resources/Ship.png");
-        shooter.scripts.add(new ShipMovement(shooter,6));
-        //System.out.println(shooter.shape.getBounds().getY());
+        shooter.scripts.add(new ShipMovement(shooter,9));
 
         GatorEngine.Create(shooter);
-
-
-        GenerateEnemies(level);
-
         int x = 0;
 
-        for(int i = 0; i < 3; i++){
+        for(int i = 0; i < 4; i++){
             GameObject Life;
             Life = new GameObject(x+=30,460);
             Life.shape = new Rectangle2D.Float(0, 0, 20, 30);
@@ -44,11 +37,22 @@ public class GatorInvaders {
             GatorEngine.Create(Life);
         }
 
+        Timer timer = new Timer();
+        if(level != 1){
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    GenerateEnemies(level);
+                }
+            }, 1000);
+        }
+
+
     }
 
     private static void GenerateEnemies(int level) {
-        int locationX = 10;
-        int locationY = 60;
+        int locationX = -15;
+        int locationY = 30;
         int invaderLevel = 0;
         HashSet<Integer> enemy2 = new HashSet<>(Arrays.asList(0,5,7,14,17));
         HashSet<Integer> enemy2_1 = new HashSet<>(Arrays.asList(6,10));
@@ -58,7 +62,7 @@ public class GatorInvaders {
             GameObject invader = new GameObject(locationX+=60, locationY);
             if((i + 1) % 6 == 0){
                 locationY+= 50;
-                locationX = 5;
+                locationX = -15;
             }
             invader.shape = new Ellipse2D.Double(0, 0, 50, 40);
             if(level == 2 && (enemy2.contains(i))){
@@ -75,7 +79,7 @@ public class GatorInvaders {
                 invader.material = new Material("resources/Enemy1.png");
             }
 
-            invader.scripts.add(new InvaderMovement(invader, 1, invaderLevel));
+            invader.scripts.add(new InvaderMovement(invader, 1.3, invaderLevel));
             Invaders.add(invader);
             GatorEngine.Create(invader);
         }

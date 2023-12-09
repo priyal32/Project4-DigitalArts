@@ -9,7 +9,7 @@ class ShipMovement extends ScriptableBehavior {
 
     int delay = 0;
     int shootingDelay = 0;
-    boolean pressedAlready = false;
+    boolean justStarted = true;
 
     ShipMovement(GameObject gameObject, int speed) {
         super(gameObject);
@@ -32,9 +32,10 @@ class ShipMovement extends ScriptableBehavior {
         if (Input.GetKeyDown('a')  && gameObject.transform.getTranslateX() >= 0) {
                 gameObject.Translate(-speed, 0);
         }
-        if (Input.GetKeyPressed(' ') && delay - shootingDelay > 10) {
+        if (Input.GetKeyPressed(' ') && (delay - shootingDelay > 10 || justStarted)) {
+                justStarted = false;
                 GameObject bullet = new GameObject((int) GatorInvaders.shooter.Bounds().getX() + 25, (int)  GatorInvaders.shooter.Bounds().getY() - 23);
-                bullet.shape = new Ellipse2D.Double(0, 0, 9, 9);
+                bullet.shape = new Ellipse2D.Double(0, 0, 7, 7);
                 bullet.material = new Material(Color.YELLOW, Color.GREEN, 1);
                 bullet.scripts.add(new BulletMovement(bullet, 30));
                 GatorInvaders.bullets.add(bullet);
